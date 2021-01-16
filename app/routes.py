@@ -16,32 +16,37 @@ from app.models import Post
 
 @app.before_request
 def before_request():
-    if current_user.is_authenticated:
-        current_user.last_seen = datetime.utcnow()
-        db.session.commit()
+    if not current_user.is_anonymous:
+        if current_user.is_authenticated:
+            current_user.last_seen = datetime.utcnow()
+            db.session.commit()
 
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
-@login_required
 def index():
-    form = PostForm()
-    if form.validate_on_submit():
-        post = Post(body=form.post.data, author=current_user)
-        db.session.add(post)
-        db.session.commit()
-        flash('Your post is now live!')
-        return redirect(url_for('index'))
+    if not current_user.is_anonymous:
+        form = PostForm()
+        if form.validate_on_submit():
+            post = Post(body=form.post.data, author=current_user)
+            db.session.add(post)
+            db.session.commit()
+            flash('Your post is now live!')
+            return redirect(url_for('index'))
     page = request.args.get('page', 1, type=int)
-    posts = current_user.followed_posts().paginate(
+    posts = Post.query.order_by(Post.timestamp.desc()).paginate(
         page, app.config['POSTS_PER_PAGE'], False)
     next_url = url_for('index', page=posts.next_num) \
         if posts.has_next else None
     prev_url = url_for('index', page=posts.prev_num) \
         if posts.has_prev else None
-    return render_template('index.html', title='Home', form=form,
-                           posts=posts.items, next_url=next_url,
-                           prev_url=prev_url)
+    if current_user.is_anonymous:
+        return render_template("index.html", title='Home', posts=posts.items,
+                               next_url=next_url, prev_url=prev_url)
+    else:
+        return render_template('index.html', title='Home', form=form,
+                               posts=posts.items, next_url=next_url,
+                               prev_url=prev_url)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -94,6 +99,39 @@ def user(username):
     form = EmptyForm()
     return render_template('user.html', user=user, posts=posts.items,
                            next_url=next_url, prev_url=prev_url, form=form)
+
+
+@app.route('/post/<post_id>')
+def post(post_id):
+    form = EmptyForm()
+    posts = Post.query.filter_by(id=post_id).first_or_404()
+    return render_template('post.html', post=posts, form=form)
+
+
+@app.route('/delete/post/<post_id>', methods=['POST'])
+def delete_post(post_id):
+    form = EmptyForm()
+    if form.validate_on_submit():
+        posts = Post.query.filter_by(id=post_id).first_or_404()
+        if current_user == posts.author:
+            db.session.delete(posts)
+            db.session.commit()
+            flash('You deleted post {}!'.format(post_id))
+            return redirect(url_for('index'))
+
+
+@app.route('/delete/user/<username>', methods=['POST'])
+def delete_user(username):
+    form = EmptyForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=username).first_or_404()
+        if current_user == user:
+            for instance in db.session.query(Post).filter_by(user_id = user.id):
+                db.session.delete(instance)
+            db.session.delete(user)
+            db.session.commit()
+            flash('You deleted your account {}!'.format(username))
+            return redirect(url_for('index'))
 
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
@@ -153,15 +191,23 @@ def unfollow(username):
         return redirect(url_for('index'))
 
 
-@app.route('/explore')
+@app.route('/my', methods=['GET', 'POST'])
 @login_required
-def explore():
+def my_microblog():
+    form = PostForm()
+    if form.validate_on_submit():
+        post = Post(body=form.post.data, author=current_user)
+        db.session.add(post)
+        db.session.commit()
+        flash('Your post is now live!')
+        return redirect(url_for('index'))
     page = request.args.get('page', 1, type=int)
-    posts = Post.query.order_by(Post.timestamp.desc()).paginate(
+    posts = current_user.followed_posts().paginate(
         page, app.config['POSTS_PER_PAGE'], False)
-    next_url = url_for('explore', page=posts.next_num) \
+    next_url = url_for('my_microblog', page=posts.next_num) \
         if posts.has_next else None
-    prev_url = url_for('explore', page=posts.prev_num) \
+    prev_url = url_for('my_microblog', page=posts.prev_num) \
         if posts.has_prev else None
-    return render_template("index.html", title='Explore', posts=posts.items,
-                           next_url=next_url, prev_url=prev_url)
+    return render_template('index.html', title='Home', form=form,
+                           posts=posts.items, next_url=next_url,
+                           prev_url=prev_url)
