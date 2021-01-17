@@ -5,27 +5,28 @@ from app import db
 from app import login
 from flask_login import UserMixin
 
-
 followers = db.Table('followers',
                      db.Column('follower_id', db.Integer, db.ForeignKey('user.id')),
                      db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
                      )
 
+upvotes = db.Table('upvotes',
+                   db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
+                   db.Column('post_id', db.Integer, db.ForeignKey('post.id'))
+                   )
 
-#upvotes = db.Table('upvotes',
-#                     db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
-#                     db.Column('post_id', db.Integer, db.ForeignKey('post.id'))
-#                     )
 
 class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), index=True, unique=True)
+    id = db.Column(db.Integer, primary_key=True, unique=True)
+    username = db.Column(db.String(64), index=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
     joined = db.Column(db.DateTime, default=datetime.utcnow)
     posts = db.relationship('Post', backref='author', lazy='dynamic')
     about_me = db.Column(db.String(140))
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+    is_admin = db.Column(db.Boolean, default=False)
+    is_deleted = db.Column(db.Boolean, default=False)
 
     followed = db.relationship(
         'User', secondary=followers,
@@ -33,10 +34,11 @@ class User(UserMixin, db.Model):
         secondaryjoin=(followers.c.followed_id == id),
         backref=db.backref('followers', lazy='dynamic'), lazy='dynamic')
 
-    #messages_received = db.relationship('Message',
-    #                                    foreign_keys='Message.recipient_id',
-      #                                  backref='recipient', lazy='dynamic')
-    last_message_read_time = db.Column(db.DateTime)
+    upvoted = db.relationship(
+        'Post', secondary=upvotes,
+        primaryjoin=(upvotes.c.user_id == id),
+        backref=db.backref('upvotes', lazy='dynamic'),
+        lazy='dynamic')
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
@@ -48,7 +50,10 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
     def avatar(self, size):
-        digest = md5(self.email.lower().encode('utf-8')).hexdigest()
+        if self.email is not None:
+            digest = md5(self.email.lower().encode('utf-8')).hexdigest()
+        else:
+            digest = 'deleted'
         return 'https://www.gravatar.com/avatar/{}?d=monsterid&s={}'.format(
             digest, size)
 
@@ -67,14 +72,9 @@ class User(UserMixin, db.Model):
     def followed_posts(self):
         followed = Post.query.join(
             followers, (followers.c.followed_id == Post.user_id)).filter(
-                followers.c.follower_id == self.id)
+            followers.c.follower_id == self.id)
         own = Post.query.filter_by(user_id=self.id)
         return followed.union(own).order_by(Post.timestamp.desc())
-
-    def new_messages(self):
-        last_read_time = self.last_message_read_time or datetime(1900, 1, 1)
-        return Message.query.filter_by(recipient=self).filter(
-            Message.timestamp > last_read_time).count()
 
 
 class Post(db.Model):
@@ -83,12 +83,32 @@ class Post(db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
+    upvoters = db.relationship(
+        'User', secondary=upvotes,
+        primaryjoin=(upvotes.c.post_id == id),
+        backref=db.backref('upvotes', lazy='dynamic'),
+        lazy='dynamic')
+
     def __repr__(self):
         return '<Post {}>'.format(self.body)
+
+    def post_score(self, post):
+        return self.upvoters.filter(
+            upvotes.c.post_id == post.id).count() > 0
+
+    def is_upvoting(self, user):
+        return self.upvoters.filter(
+            upvotes.c.user_id == user.id).count() > 0
+
+    def upvote(self, user):
+        if not self.is_upvoting(user):
+            self.upvoters.append(user)
+
+    def unupvote(self, user):
+        if self.is_upvoting(user):
+            self.upvoters.remove(user)
 
 
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))
-
-

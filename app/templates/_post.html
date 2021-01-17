@@ -1,17 +1,66 @@
-    <table style="border: solid">
+<div class="post">
+    <table style="text-align: left; width: 100%">
+        <thead>
         <tr valign="top">
-            <td><img src="{{ post.author.avatar(36) }}"></td>
-            <td>
-                <a href="{{ url_for('user', username=post.author.username) }}">
-                    {{ post.author.username }}
-                </a>
-                says:<br>{{ post.body }}
+            <th colspan="2"><img style="float: left" src="{{ post.author.avatar(64) }}">
 
-                <br> <a href="{{ url_for('post', post_id=post.id) }}">
-                    link
-                </a>
-                {% if current_user == post.author %}
-                <form action="{{ url_for('delete_post', post_id=post.id) }}" method="post">
+                {% if not post.author.is_deleted %}
+                    &nbsp;
+                    <a href="{{ url_for('user', username=post.author.username) }}">
+                        {{ post.author.username }}
+                    </a>
+                {% else %}
+                    <a style="text-align: left; float: left"
+                       href="{{ url_for('user', username=post.author.username) }}">[deleted]</a>
+                {% endif %}
+            </th>
+            <th>
+                <div style="float: right">Score: {{ post.upvoters.count() }}</div>
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td colspan="3">
+                <hr>
+                <p>{{ post.body }}</p></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+            <br>
+            {% if post.upvoters.count() > 0 %}
+                +:
+                {% for user in post.upvoters %}
+                    <a href="{{ url_for('user', username=user.username) }}">{{ user.username }}</a>
+                    {% endfor %}
+            {% endif %}
+                </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <br>
+                <a class="floated" href="{{ url_for('post', post_id=post.id) }}">link</a>
+                {% if not current_user.is_anonymous %}
+                    {% if not post.author == current_user %}
+                        {% if not post.is_upvoting(current_user) %}
+
+                            <form class="floated" action="{{ url_for('upvote', post_id=post.id) }}" method="post">
+                                {{ form.hidden_tag() }}
+                                {{ form.submit(value='upvote') }}
+                            </form>
+
+                        {% else %}
+
+                            <form class="floated" action="{{ url_for('unupvote', post_id=post.id) }}" method="post">
+                                {{ form.hidden_tag() }}
+                                {{ form.submit(value='unupvote') }}
+                            </form>
+
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+                {% if current_user == post.author or current_user.is_admin %}
+                    <form class="floated" action="{{ url_for('delete_post', post_id=post.id) }}" method="post">
                         {{ form.hidden_tag() }}
                         {{ form.submit(value='Delete') }}
                     </form>
@@ -19,3 +68,4 @@
             </td>
         </tr>
     </table>
+</div>

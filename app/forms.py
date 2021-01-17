@@ -31,7 +31,6 @@ class RegistrationForm(FlaskForm):
 
 
 class EditProfileForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
     about_me = TextAreaField('About me', validators=[Length(min=0, max=140)])
     submit = SubmitField('Submit')
 
@@ -47,6 +46,11 @@ class EditProfileForm(FlaskForm):
 
 
 class EmptyForm(FlaskForm):
+    submit = SubmitField('Submit')
+
+
+class CheckboxForm(FlaskForm):
+    checkbox = BooleanField('Delete posts')
     submit = SubmitField('Submit')
 
 

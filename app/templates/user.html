@@ -1,48 +1,58 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <table>
+    <table style="padding: auto">
         <tr valign="top">
-            <td><img src="{{ user.avatar(128) }}"></td>
-            <td>
-                <h1>User: {{ user.username }}</h1>
-                {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
-                {% if user.last_seen %}<p>Last seen on: {{ user.last_seen }}</p>{% endif %}
-                <p>{{ user.followers.count() }} followers, {{ user.followed.count() }} following.</p>
-                {% if user == current_user %}
-                    <p><a href="{{ url_for('edit_profile') }}">Edit your profile</a></p>
-                {% elif not current_user.is_following(user) %}
-                    <p>
-                    <form action="{{ url_for('follow', username=user.username) }}" method="post">
-                        {{ form.hidden_tag() }}
-                        {{ form.submit(value='Follow') }}
-                    </form>
-                    </p>
-                {% else %}
-                    <p>
-                    <form action="{{ url_for('unfollow', username=user.username) }}" method="post">
-                        {{ form.hidden_tag() }}
-                        {{ form.submit(value='Unfollow') }}
-                    </form>
-                    </p>
+            {% if user.is_deleted %}
+                <h1>User has deleted his account</h1>
+            {% else %}
+                <td><img src="{{ user.avatar(210) }}"></td>
+                <td>
+                    <h2>User: {{ user.username }}</h2>
+                    {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
+                    {% if user.last_seen %}<p>Last seen on: {{ user.last_seen }}</p>{% endif %}
+                    <p>{{ user.followers.count() }} followers, {{ user.followed.count() }} following.</p>
+                    {% if not current_user.is_anonymous %}
+                        {% if user == current_user or current_user.is_admin %}
+                            <p><a href="{{ url_for('edit_profile', username=user.username) }}">Edit your profile</a></p>
+                        {% elif not current_user.is_following(user) %}
+                            <p>
+                            <form  action="{{ url_for('follow', username=user.username) }}" method="post">
+                                {{ form.hidden_tag() }}
+                                {{ form.submit(value='Follow') }}
+                            </form>
+                            </p>
+                        {% else %}
+                            <p>
+                            <form action="{{ url_for('unfollow', username=user.username) }}" method="post">
+                                {{ form.hidden_tag() }}
+                                {{ form.submit(value='Unfollow') }}
+                            </form>
+                            </p>
+                        {% endif %}
+                        {% if user == current_user or current_user.is_admin %}
+                            <form action="{{ url_for('delete_user', username=user.username) }}" method="post">
+                                {{ delete_form.hidden_tag() }}
+                                {{ delete_form.submit(value='Delete your account') }}
+                                {{ delete_form.checkbox(value='Delete all posts') }} delete all posts?
+                            </form>
+                        {% endif %}
+                    {% endif %}
+                </td>
+                </tr>
+                </table>
+                <hr style="  border: 2px solid; border-radius: 5px;">
+                <a href="{{ url_for('user', username=user.username) }}">Posts</a>
+                <a href="{{ url_for('user_upvoted', username=user.username) }}">Upvotes</a>
+                <hr style="  border: 2px solid; border-radius: 5px;">
+                {% for post in posts %}
+                    {% include '_post.html' %}
+                {% endfor %}
+                {% if prev_url %}
+                    <a href="{{ prev_url }}">Newer posts</a>
                 {% endif %}
-                {% if user == current_user %}
-                    <form action="{{ url_for('delete_user', username=user.username) }}" method="post">
-                        {{ form.hidden_tag() }}
-                        {{ form.submit(value='Delete your account') }}
-                    </form>
+                {% if next_url %}
+                    <a href="{{ next_url }}">Older posts</a>
                 {% endif %}
-            </td>
-        </tr>
-    </table>
-    <hr>
-    {% for post in posts %}
-        {% include '_post.html' %}
-    {% endfor %}
-    {% if prev_url %}
-        <a href="{{ prev_url }}">Newer posts</a>
-    {% endif %}
-    {% if next_url %}
-        <a href="{{ next_url }}">Older posts</a>
-    {% endif %}
+            {% endif %}
 {% endblock %}
