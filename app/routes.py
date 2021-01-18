@@ -2,7 +2,7 @@ from app import app
 from app.forms import LoginForm
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import current_user, login_user
-from app.models import User
+from app.models import User, upvotes
 from flask_login import logout_user
 from flask_login import login_required
 from app import db
@@ -134,6 +134,8 @@ def delete_post(post_id):
     if form.validate_on_submit():
         posts = Post.query.filter_by(id=post_id).first_or_404()
         if current_user == posts.author or current_user.is_admin:
+            posts.upvoters = []
+            db.session.commit()
             db.session.delete(posts)
             db.session.commit()
             flash('You deleted post {}!'.format(post_id))
