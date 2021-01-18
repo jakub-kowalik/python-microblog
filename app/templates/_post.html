@@ -9,13 +9,14 @@
                     <a href="{{ url_for('user', username=post.author.username) }}">
                         {{ post.author.username }}
                     </a>
+                     &nbsp; {{ post.timestamp }}
                 {% else %}
                     <a style="text-align: left; float: left"
                        href="{{ url_for('user', username=post.author.username) }}">[deleted]</a>
                 {% endif %}
             </th>
             <th>
-                <div style="float: right">Score: {{ post.upvoters.count() }}</div>
+                <div style="float: right">{{ post.upvoters.count() }}</div>
             </th>
         </tr>
         </thead>
