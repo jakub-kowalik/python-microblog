@@ -32,7 +32,7 @@ def index():
             post = Post(body=form.post.data, author=current_user)
             db.session.add(post)
             db.session.commit()
-            flash('Your post is now live!')
+            flash('Dodano wpis!')
             return redirect(url_for('index'))
     page = request.args.get('page', 1, type=int)
     posts = Post.query.order_by(Post.timestamp.desc()).paginate(
@@ -58,10 +58,10 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.check_password(form.password.data):
-            flash('Invalid username or password')
+            flash('Niewlasciwe dane')
             return redirect(url_for('login'))
         if user.is_deleted:
-            flash('User is deleted')
+            flash('Uzytkownik usunal swoje konto')
             return redirect(url_for('login'))
         login_user(user, remember=form.remember_me.data)
         return redirect(url_for('index'))
@@ -84,7 +84,7 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        flash('Congratulations, you are now a registered user!')
+        flash('Witamy na mikroblogu!')
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
 
@@ -138,7 +138,7 @@ def delete_post(post_id):
             db.session.commit()
             db.session.delete(posts)
             db.session.commit()
-            flash('You deleted post {}!'.format(post_id))
+            flash('Usunieto wpis!')
             return redirect(request.referrer)
 
 
@@ -148,15 +148,12 @@ def delete_user(username):
     if form.validate_on_submit():
         user = User.query.filter_by(username=username).first_or_404()
         if current_user == user or current_user.is_admin:
-            if form.checkbox:
-                for instance in db.session.query(Post).filter_by(user_id=user.id):
-                    db.session.delete(instance)
             user.is_deleted = True
             user.email = None
             user.about_me = None
             user.password_hash = None
             db.session.commit()
-            flash('You deleted your account {}!'.format(username))
+            flash('Usunieto konto! '.format(username))
             if current_user.is_admin:
                 return redirect(request.referrer)
             else:
@@ -172,7 +169,7 @@ def edit_profile(username):
         if form.validate_on_submit():
             user.about_me = form.about_me.data
             db.session.commit()
-            flash('Your changes have been saved.')
+            flash('Zmiany zostaly zapisane.')
             return redirect(url_for('edit_profile', username=user.username))
         elif request.method == 'GET':
             form.about_me.data = user.about_me
@@ -188,14 +185,14 @@ def follow(username):
     if form.validate_on_submit():
         user = User.query.filter_by(username=username).first()
         if user is None:
-            flash('User {} not found.'.format(username))
+            flash('Nie ma uzytkownika {}.'.format(username))
             return redirect(url_for('index'))
         if user == current_user:
-            flash('You cannot follow yourself!')
+            flash('Nie mozesz obserwowac sam siebie!')
             return redirect(url_for('user', username=username))
         current_user.follow(user)
         db.session.commit()
-        flash('You are following {}!'.format(username))
+        flash('Zaobserwowano {}!'.format(username))
         return redirect(request.referrer)
     else:
         return redirect(url_for('index'))
@@ -208,14 +205,14 @@ def unfollow(username):
     if form.validate_on_submit():
         user = User.query.filter_by(username=username).first()
         if user is None:
-            flash('User {} not found.'.format(username))
+            flash('Nie ma uzytkownika {}.'.format(username))
             return redirect(url_for('index'))
         if user == current_user:
-            flash('You cannot unfollow yourself!')
+            flash('Nie mozesz odobserwowac siebie')
             return redirect(url_for('user', username=username))
         current_user.unfollow(user)
         db.session.commit()
-        flash('You are not following {}.'.format(username))
+        flash('Nie obserwujesz juz {}.'.format(username))
         return redirect(request.referrer)
     else:
         return redirect(url_for('index'))
@@ -229,7 +226,7 @@ def my_microblog():
         post = Post(body=form.post.data, author=current_user)
         db.session.add(post)
         db.session.commit()
-        flash('Your post is now live!')
+        flash('Dodano wpis!')
         return redirect(url_for('index'))
     page = request.args.get('page', 1, type=int)
     posts = current_user.followed_posts().paginate(
@@ -251,13 +248,13 @@ def upvote(post_id):
         if form.validate_on_submit():
             post = Post.query.filter_by(id=post_id).first()
             if post is None:
-                flash('User {} not found.'.format(username))
+                flash('Nie ma uzytkownika {}.'.format(username))
                 return redirect(url_for('index'))
             if post.author == current_user:
                 return redirect(url_for('index'))
             post.upvote(current_user)
             db.session.commit()
-            flash('You upvoted {}!'.format(post_id))
+            flash('Zaplusowales wpis o id {}!'.format(post_id))
             return redirect(request.referrer)
         else:
             return redirect(url_for('index'))
@@ -271,11 +268,11 @@ def unupvote(post_id):
         if form.validate_on_submit():
             post = Post.query.filter_by(id=post_id).first()
             if post is None:
-                flash('User {} not found.'.format(username))
+                flash('Nie ma uzytkownika {}.'.format(username))
                 return redirect(url_for('index'))
             post.unupvote(current_user)
             db.session.commit()
-            flash('You unupvoted {}!'.format(post_id))
+            flash('Odplusowales wpis o id {}!'.format(post_id))
             return redirect(request.referrer)
         else:
             return redirect(url_for('index'))

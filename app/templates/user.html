@@ -4,37 +4,36 @@
     <table style="padding: auto">
         <tr valign="top">
             {% if user.is_deleted %}
-                <h1>User has deleted his account</h1>
+                <h1>Użytkownik usunął swoje konto z portalu</h1>
             {% else %}
                 <td><img src="{{ user.avatar(210) }}"></td>
                 <td>
-                    <h2>User: {{ user.username }}</h2>
-                    {% if user.last_seen %}<p>Dolaczyl: {{ user.joined }}</p>{% endif %}
-                    {% if user.about_me %}<p>Bio: {{ user.about_me }}</p>{% endif %}
-                    <p>{{ user.followers.count() }} followers, {{ user.followed.count() }} following.</p>
+                    <h2>{{ user.username }}</h2>
+                    {% if user.last_seen %}<p>Dołączył: {{ user.joined }}</p>{% endif %}
+                    {% if user.about_me %}<p>O mnie: {{ user.about_me }}</p>{% endif %}
+                    <p>{{ user.followers.count() }} obserwujących, {{ user.followed.count() }} obserwowanych.</p>
                     {% if not current_user.is_anonymous %}
                         {% if user == current_user or current_user.is_admin %}
-                            <p><a href="{{ url_for('edit_profile', username=user.username) }}">Edit your profile</a></p>
+                            <p><a href="{{ url_for('edit_profile', username=user.username) }}">Edytuj profil</a></p>
                         {% elif not current_user.is_following(user) %}
                             <p>
                             <form action="{{ url_for('follow', username=user.username) }}" method="post">
                                 {{ form.hidden_tag() }}
-                                {{ form.submit(value='Follow') }}
+                                {{ form.submit(value='Obserwuj') }}
                             </form>
                             </p>
                         {% else %}
                             <p>
                             <form action="{{ url_for('unfollow', username=user.username) }}" method="post">
                                 {{ form.hidden_tag() }}
-                                {{ form.submit(value='Unfollow') }}
+                                {{ form.submit(value='Odobserwuj') }}
                             </form>
                             </p>
                         {% endif %}
                         {% if user == current_user or current_user.is_admin %}
                             <form action="{{ url_for('delete_user', username=user.username) }}" method="post">
                                 {{ delete_form.hidden_tag() }}
-                                {{ delete_form.submit(value='Delete your account') }}
-                                {{ delete_form.checkbox(value='Delete all posts') }} delete all posts?
+                                {{ delete_form.submit(value='Usuń swoje konto') }}
                             </form>
                         {% endif %}
                     {% endif %}
@@ -42,18 +41,18 @@
                 </tr>
                 </table>
                 <hr style="  border: 2px solid; border-radius: 5px;">
-                <a href="{{ url_for('user', username=user.username) }}">Posts</a>
-                <a href="{{ url_for('user_upvoted', username=user.username) }}">Upvotes</a>
+                <a href="{{ url_for('user', username=user.username) }}">Wpisy</a>
+                <a href="{{ url_for('user_upvoted', username=user.username) }}">Plusy</a>
                 <hr style="  border: 2px solid; border-radius: 5px;">
                 {% for post in posts %}
                     {% include '_post.html' %}
                 {% endfor %}
                 <br>
                 {% if prev_url %}
-                    <a style="float: right" href="{{ prev_url }}">Newer posts</a>
+                    <a style="float: right" href="{{ prev_url }}">Nowsze >></a>
                 {% endif %}
                 {% if next_url %}
-                    <a style="float: left" href="{{ next_url }}">Older posts</a>
+                    <a style="float: left" href="{{ next_url }}"><< Starsze</a>
                 {% endif %}
                 <br>
             {% endif %}
