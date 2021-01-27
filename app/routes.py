@@ -1,18 +1,20 @@
-from app import app
-from app.forms import LoginForm
+from datetime import datetime
+
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import current_user, login_user
-from app.models import User, upvotes
-from flask_login import logout_user
 from flask_login import login_required
+from flask_login import logout_user
+
+from app import app
 from app import db
-from app.forms import RegistrationForm
-from datetime import datetime
+from app.forms import CheckboxForm
 from app.forms import EditProfileForm
 from app.forms import EmptyForm
+from app.forms import LoginForm
 from app.forms import PostForm
-from app.forms import CheckboxForm
+from app.forms import RegistrationForm
 from app.models import Post
+from app.models import User
 
 
 @app.before_request
@@ -42,10 +44,10 @@ def index():
     prev_url = url_for('index', page=posts.prev_num) \
         if posts.has_prev else None
     if current_user.is_anonymous:
-        return render_template("index.html", title='Home', posts=posts.items,
+        return render_template("index.html", title='Wszystko', posts=posts.items,
                                next_url=next_url, prev_url=prev_url)
     else:
-        return render_template('index.html', title='Home', form=form,
+        return render_template('index.html', title='Wszystko', form=form,
                                posts=posts.items, next_url=next_url,
                                prev_url=prev_url)
 
@@ -65,7 +67,7 @@ def login():
             return redirect(url_for('login'))
         login_user(user, remember=form.remember_me.data)
         return redirect(url_for('index'))
-    return render_template('login.html', title='Sign In', form=form)
+    return render_template('login.html', title='Logowanie', form=form)
 
 
 @app.route('/logout')
@@ -86,7 +88,7 @@ def register():
         db.session.commit()
         flash('Witamy na mikroblogu!')
         return redirect(url_for('login'))
-    return render_template('register.html', title='Register', form=form)
+    return render_template('register.html', title='Rejestracja', form=form)
 
 
 @app.route('/user/<username>')
@@ -173,9 +175,9 @@ def edit_profile(username):
             return redirect(url_for('edit_profile', username=user.username))
         elif request.method == 'GET':
             form.about_me.data = user.about_me
-        return render_template('edit_profile.html', title='Edit Profile',
+        return render_template('edit_profile.html', title='Edycja',
                                form=form)
-    return render_template('404.html', title='error')
+    return render_template('404.html', title='404')
 
 
 @app.route('/follow/<username>', methods=['POST'])
@@ -235,7 +237,7 @@ def my_microblog():
         if posts.has_next else None
     prev_url = url_for('my_microblog', page=posts.prev_num) \
         if posts.has_prev else None
-    return render_template('index.html', title='Home', form=form,
+    return render_template('index.html', title='Moj mikroblog', form=form,
                            posts=posts.items, next_url=next_url,
                            prev_url=prev_url)
 

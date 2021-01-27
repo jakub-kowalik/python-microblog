@@ -19,7 +19,7 @@ body {
 
 .navbar {
     font-size: 1vw;
-    text-align: left;
+    text-align: center;
     width: calc(1.6180339887498948482 * 100% - 100%);
     margin: auto;
     vertical-align: center;
@@ -69,6 +69,7 @@ textarea {
     border-color: #2c2c2c;
   background-color: #1c1c1c;
   color: #cacecf;
+    width: 100%;
 }
 
 #submit {

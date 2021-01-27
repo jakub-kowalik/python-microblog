@@ -12,7 +12,7 @@
 <body>
 <div class="navbar-wrapper">
     <div class="navbar">
-        Mikroblog:
+        <div style="float: left">Mikroblog</div>
         <a href="{{ url_for('index') }}">Wszystko</a>
         {% if current_user.is_anonymous %}
             <a style="float: right" href="{{ url_for('login') }}">Zaloguj</a>
