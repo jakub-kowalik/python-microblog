@@ -67,26 +67,26 @@ a:hover {
 
 textarea {
     border-color: #2c2c2c;
-  background-color: #1c1c1c;
-  color: #cacecf;
+    background-color: #1c1c1c;
+    color: #cacecf;
     width: 100%;
 }
 
 #submit {
-  background-color: #000000;
-  color: #cacecf;
+    background-color: #000000;
+    color: #cacecf;
     border: none;
     border-radius: 5px;
     padding: 5px;
 }
 
 #submit:hover {
-  background-color: #505050;
-  color: white;
+    background-color: #505050;
+    color: white;
 }
 
 input {
-        border-color: #2c2c2c;
-  background-color: #1c1c1c;
-  color: #cacecf;
+    border-color: #2c2c2c;
+    background-color: #1c1c1c;
+    color: #cacecf;
 }

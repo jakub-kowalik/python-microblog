@@ -2,32 +2,32 @@
 
 {% block content %}
     {% if not current_user.is_anonymous %}
-    <h1>{{ current_user.username }} chyba pomyliłeś witryny, reddit jest dwa serwery dalej...</h1>
+        <h1>{{ current_user.username }} chyba pomyliłeś witryny, reddit jest dwa serwery dalej...</h1>
     {% else %}
-    <h1>Witaj na mikroblogu!</h1>
+        <h1>Witaj na mikroblogu!</h1>
     {% endif %}
     {% if form %}
-    <form action="" method="post">
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.post.label }}<br>
-            {{ form.post(cols=32, rows=4) }}<br>
-            {% for error in form.post.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <p>{{ form.submit() }}</p>
-    </form>
+        <form action="" method="post">
+            {{ form.hidden_tag() }}
+            <p>
+                {{ form.post.label }}<br>
+                {{ form.post(cols=32, rows=4) }}<br>
+                {% for error in form.post.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </p>
+            <p>{{ form.submit() }}</p>
+        </form>
     {% endif %}
     {% for post in posts %}
         {% include '_post.html' %}
     {% endfor %}
     <br>
     {% if prev_url %}
-    <a style="float: right" href="{{ prev_url }}">Nowsze >></a>
+        <a style="float: right" href="{{ prev_url }}">Nowsze >></a>
     {% endif %}
     {% if next_url %}
-    <a style="float: left" href="{{ next_url }}"><< Starsze</a>
+        <a style="float: left" href="{{ next_url }}"><< Starsze</a>
     {% endif %}
     <br>
 {% endblock %}

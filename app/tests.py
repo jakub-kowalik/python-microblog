@@ -1,5 +1,6 @@
-from datetime import datetime, timedelta
 import unittest
+from datetime import datetime, timedelta
+
 from app import app, db
 from app.models import User, Post
 
