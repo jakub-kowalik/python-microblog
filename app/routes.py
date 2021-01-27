@@ -131,6 +131,7 @@ def post(post_id):
 
 
 @app.route('/delete/post/<post_id>', methods=['POST'])
+@login_required
 def delete_post(post_id):
     form = EmptyForm()
     if form.validate_on_submit():
@@ -145,6 +146,7 @@ def delete_post(post_id):
 
 
 @app.route('/delete/user/<username>', methods=['POST'])
+@login_required
 def delete_user(username):
     form = CheckboxForm()
     if form.validate_on_submit():

@@ -52,4 +52,4 @@ class CheckboxForm(FlaskForm):
 class PostForm(FlaskForm):
     post = TextAreaField('Powiedz cos od siebie', validators=[
         DataRequired(), Length(min=1, max=1000)])
-    submit = SubmitField('Submit')
+    submit = SubmitField('Wyslij')
